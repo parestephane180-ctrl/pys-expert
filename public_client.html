@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PYS SOFTWARE HUB</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --primary: #00d1ff;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: linear-gradient(to bottom, #1e293b, var(--bg));
+            width: 100%;
+        }
+
+        h1 { font-size: 2.2em; margin: 0; }
+        h1 span { color: var(--primary); }
+        .subtitle { color: #94a3b8; font-size: 0.9em; margin-top: 5px; }
+
+        .section-container { width: 90%; max-width: 1000px; margin-top: 30px; }
+        .section-title {
+            color: var(--primary);
+            font-size: 1.1em;
+            font-weight: bold;
+            border-left: 4px solid var(--primary);
+            padding-left: 10px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #334155;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .icon { font-size: 40px; margin-bottom: 10px; display: block; }
+        .name { font-size: 1.1em; font-weight: bold; display: block; color: white; }
+        .desc { font-size: 0.85em; color: #94a3b8; margin: 10px 0 20px 0; min-height: 35px; }
+
+        /* Le bouton qui cache bien le lien */
+        .btn-dl {
+            background: var(--primary);
+            color: var(--bg);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+            font-size: 0.9em;
+            transition: 0.3s;
+            overflow: hidden; /* Empêche le texte de déborder */
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        #main-loader { margin-top: 50px; color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>PYS <span>SOFTWARE HUB</span></h1>
+        <p class="subtitle">Solutions digitales par Stéphane</p>
+    </header>
+
+    <div id="main-loader">Synchronisation avec mon cerveau...</div>
+
+    <div class="section-container" id="sec-apps" style="display: none;">
+        <div class="section-title">📱 APPLICATIONS MOBILES (APK)</div>
+        <div class="grid" id="grid-apps"></div>
+    </div>
+
+    <div class="section-container" id="sec-pc" style="display: none;">
+        <div class="section-title">💻 LOGICIELS PC (WINDOWS/EXE)</div>
+        <div class="grid" id="grid-pc"></div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCn1gcTXKsqc7BLvCBdRGvTzq7fbRSMIWc",
+            authDomain: "pys-exert.firebaseapp.com",
+            databaseURL: "https://pys-exert-default-rtdb.firebaseio.com",
+            projectId: "pys-exert",
+            storageBucket: "pys-exert.firebasestorage.app",
+            messagingSenderId: "1059289536044",
+            appId: "1:1059289536044:web:304543d1d0d5a0947ae389"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        function createCard(item) {
+            // Sécurité : si l'icône est un lien, on met une image, sinon on laisse l'émoji
+            let iconDisplay = item.icone && item.icone.startsWith('http') 
+                ? `<img src="${item.icone}" style="width:50px; height:50px; border-radius:10px;">` 
+                : `<span class="icon">${item.icone || '📦'}</span>`;
+
+            return `
+                <div class="card">
+                    ${iconDisplay}
+                    <span class="name">${item.nom}</span>
+                    <p class="desc">${item.description || 'Solution par PYS Expert'}</p>
+                    <a href="${item.lien}" target="_blank" class="btn-dl">
+                        📥 TÉLÉCHARGER
+                    </a>
+                </div>
+            `;
+        }
+
+        database.ref('logiciels').on('value', (snapshot) => {
+            const data = snapshot.val();
+            document.getElementById('main-loader').style.display = "none";
+            const gridApps = document.getElementById('grid-apps');
+            const gridPc = document.getElementById('grid-pc');
+            
+            gridApps.innerHTML = "";
+            gridPc.innerHTML = "";
+
+            if (data) {
+                if (data.apps) {
+                    document.getElementById('sec-apps').style.display = "block";
+                    Object.values(data.apps).forEach(item => { gridApps.innerHTML += createCard(item); });
+                }
+                if (data.pc) {
+                    document.getElementById('sec-pc').style.display = "block";
+                    Object.values(data.pc).forEach(item => { gridPc.innerHTML += createCard(item); });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
